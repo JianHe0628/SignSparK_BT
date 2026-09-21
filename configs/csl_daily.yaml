@@ -1,0 +1,116 @@
+# Back-translation on CSL-Daily (Chinese Sign Language).
+name: bt_csl_daily
+
+# Weights & Biases logging. Set WANDB_API_KEY and WANDB_ENTITY in the
+# environment; no credentials belong in this file.
+wandb: true
+wandb_project: back_translation
+
+data:
+    # LMDBs live in ${DATA_ROOT}/lmdb/{train,dev,test}. Download them with
+    # tools/download_data.py from the SignSparK repo.
+    base_path: "${DATA_ROOT}/lmdb"
+    dataset: CSL-Daily          # matched against the LMDB filename
+    version: csldaily           # scores Chinese per character at eval
+    feature_size: 240           # SMPL+MANO: body 60 + left hand 90 + right hand 90
+    level: word
+    tokenizer: jieba            # Chinese word segmentation, needs the 'zh' extra
+    txt_lowercase: true
+    # Off for Chinese: the period-detaching trick is for Latin script, where
+    # the full stop is glued to the last word. Chinese punctuation is
+    # full-width and jieba already emits it as its own token, and CSL BLEU is
+    # scored per character, so an appended "." would pollute every sentence.
+    normalize_punctuation: false
+    max_sent_length: 400        # filters the training split only
+    max_sgn_length: 300         # frames per clip, longer clips are truncated
+    random_train_subset: -1
+    random_dev_subset: -1
+
+testing:
+    recognition_beam_sizes:
+    - 1
+    translation_beam_sizes:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    translation_beam_alphas:
+    - -1
+    - 0
+    - 1
+    - 2
+    - 3
+
+training:
+    model_dir: "./checkpoints/bt_csl_daily"
+    random_seed: 42
+    reset_best_ckpt: false
+    reset_scheduler: false
+    reset_optimizer: false
+    recognition_loss_weight: 1.0
+    translation_loss_weight: 1.0
+    eval_metric: bleu
+    optimizer: adam
+    learning_rate: 0.0005
+    batch_size: 256
+    batch_type: sentence
+    num_workers: 4
+    epochs: 250
+    early_stopping_metric: eval_metric
+    translation_normalization: batch
+    eval_recognition_beam_size: 1
+    eval_translation_beam_size: 3
+    eval_translation_beam_alpha: -1
+    num_valid_log: 5
+    overwrite: false
+    shuffle: true
+    use_cuda: true
+    translation_max_output_length: 30
+    keep_last_ckpts: 3
+    batch_multiplier: 1
+    logging_freq: 100
+    validation_freq: 100
+    betas:
+    - 0.9
+    - 0.998
+    scheduling: plateau
+    learning_rate_min: 1.0e-08
+    weight_decay: 0.001
+    patience: 3
+    decrease_factor: 0.8
+    label_smoothing: 0.1
+
+model:
+    initializer: xavier
+    bias_initializer: zeros
+    init_gain: 1.0
+    embed_initializer: xavier
+    embed_init_gain: 1.0
+    tied_softmax: false
+    encoder:
+        type: transformer
+        num_layers: 3
+        num_heads: 8
+        embeddings:
+            embedding_dim: 512
+            scale: false
+            dropout: 0.1
+            norm_type: batch
+            activation_type: softsign
+        hidden_size: 512
+        ff_size: 1024
+        dropout: 0.1
+    decoder:
+        type: transformer
+        num_layers: 3
+        num_heads: 8
+        embeddings:
+            embedding_dim: 512
+            scale: false
+            dropout: 0.1
+            norm_type: batch
+            activation_type: softsign
+        hidden_size: 512
+        ff_size: 1024
+        dropout: 0.1

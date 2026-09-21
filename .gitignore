@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.egg-info/
+/build/
+/dist/
+.eggs/
+.ipynb_checkpoints/
+
+# Environments
+.env
+.venv/
+venv/
+
+# Editors
+.idea/
+.vscode/
+
+# Model weights and data are distributed via HuggingFace, never committed.
+*.ckpt
+*.pt
+*.pth
+*.lmdb/
+*.mdb
+*.lzma
+*.npy
+/data/
+/checkpoints/
+/outputs/
+.bt_index_cache/
+
+# HuggingFace publishing: maintainer-only, not part of the codebase.
+model_card.md
+tools/upload_models.py
+
+# Training artefacts
+/wandb/
+*.log

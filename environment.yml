@@ -1,0 +1,28 @@
+# conda env create -f environment.yml && conda activate signspark-bt
+#
+# CUDA 12.8 wheels, needed for Blackwell / RTX 50-series. For another CUDA
+# version change the index URL and drop the +cu128 tag; CPU-only: .../whl/cpu.
+# Versions match SignSparK where the two overlap, so one env can run both.
+name: signspark-bt
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    - --extra-index-url https://download.pytorch.org/whl/cu128
+    - torch==2.10.0+cu128
+    # numpy 2.x wrote the LMDB archives; older numpy works via a shim but is untested.
+    - numpy==2.2.6
+    - lmdb==2.2.0
+    - PyYAML==6.0.2
+    - tqdm==4.67.1
+    - wandb==0.21.3
+    - jieba==0.42.1        # CSL-Daily only
+    - "huggingface_hub<1.0"  # tools/download_models.py
+    # How2Sign pseudo-glosses. The model version affects the output:
+    #   python -m spacy download en_core_web_lg   # 3.8.0
+    - spacy==3.8.7
+    - pytest==8.3.4
+    - -e .
